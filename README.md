@@ -28,8 +28,20 @@ Under these circumstances the module could still be used as described below.
 
 #### Deploying Terraform State Storage Resources
 
-To 
+The module requires three inputs: names of an S3 bucket and DynamoDB table and
+an AWS provider configuration for an account that will store infrastructure
+information.  
 
-#### Storing State of Some Infrastructure Stack
+
+```tf
+provider "aws" {
+  region                  = "us-east-1"
+  profile                 = "shared"
+  shared_credentials_file = "~/.aws/credentials
+  version                 = "~> 3.6"
+}
+```
+
+#### Storing State of an Infrastructure Stack
 
 ### Destroying Terraform State Artifacts
