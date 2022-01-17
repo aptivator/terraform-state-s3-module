@@ -29,19 +29,98 @@ Under these circumstances the module could still be used as described below.
 #### Deploying Terraform State Storage Resources
 
 The module requires three inputs: names of an S3 bucket and DynamoDB table and
-an AWS provider configuration for an account that will store infrastructure
-information.  
-
+an AWS provider configuration for the account that will store the infrastructure
+information.  Consult terraform documentation to specify appropriate provider
+settings.
 
 ```tf
+/* terraform-state-s3.tf */
+
 provider "aws" {
+  alias                   = "state"
   region                  = "us-east-1"
   profile                 = "shared"
   shared_credentials_file = "~/.aws/credentials
-  version                 = "~> 3.6"
 }
 ```
 
-#### Storing State of an Infrastructure Stack
+`terraform-state-s3-module` can be fetched directly from github and the aws 
+provider configuration can be passed directly to it.
+
+```tf
+module "terraform-state" {
+  source                      = "git@github.com:anderson-optimization/terraform-state-s3-module.git"
+  terraform_state_bucket_name = "my-organization-or-some-unique-name-terraform-state"
+  terraform_state_table_name  = "terraform-state"
+  
+  providers = {
+    aws = aws.state
+  }
+}
+```
+
+Running `terraform init` will download the `terraform-state-s3` and aws provider
+modules.  Invoking `terraform apply` should provision the S3 bucket and DynamoDB
+table.
+
+**NOTE:** The module is currently in a private repository and github access
+credentials for anderson-optimization account are necessary.
+
+#### Saving State of an Infrastructure Stack
+
+Whenever some stack is provisioned or updated, the configuration for the
+infrastructure must include information for the state S3 bucket and DynamoDB
+table.  Terraform provides `s3` `backend` block to declare state location as
+illustrated below.
+
+```tf
+terraform {
+  backend "s3" {
+    bucket                  = "{bucket that stores terraform states}"
+    key                     = "{name of the  infrastructure state file}"
+    dynamodb_table          = "{DynamoDB table}"
+    encrypt                 = true    
+    region                  = "{region where the state infrasturcture was provisioned}"
+    shared_credentials_file = "{path to aws credentials file}"
+    profile                 = "{aws credentials profile to use for Shared Services account}"
+  }
+}
+```
+
+For the `key`, the recommended approach is to specify the account where the
+service is deployed, followed by the service name, and then followed by the name
+of the state file.  For example, if `programmatic-api` service is deployed in
+development account, then the `key` would be
+`dev/programmatic-api/programmatic-api.tfstate`.
+
+The recommended approach is to specify backend information in a separate file
+(e.g., `backend.hcl`) that would not be committed to source control.  The file
+would contain the same data state information as show below.
+
+```
+bucket                  = "{bucket that stores terraform states}"
+key                     = "{name of the  infrastructure state file}"
+dynamodb_table          = "{DynamoDB table}"
+encrypt                 = true    
+region                  = "{region where the state infrasturcture was provisioned}"
+shared_credentials_file = "{path to aws credentials file}"
+profile                 = "{aws credentials profile to use for Shared Services account}"
+```
+
+The terraform infrastructure file would contain blank `backend` declaration.
+
+```tf
+terraform {
+  backend "s3" {}
+}
+```
+
+To initialize the state backend, the following command should be run.
+
+```
+terraform init -backend-config=backend.hcl
+```
 
 ### Destroying Terraform State Artifacts
+
+Once the state S3 bucket and DynamoDb database are created
