@@ -1,6 +1,17 @@
-## `terraform-state-s3-module`
+# `terraform-state-s3-module`
 
-### Introduction
+## Table of Contents
+
+* [Introduction](#introduction)
+* [Usage](#usage)
+  * [Prerequisites](#prerequisites)
+  * [Deploying Terraform State Storage Resources](#deploying-terraform-state-storage-resources)
+  * [Working with an Infrastructure Stack](#working-with-an-infrastructure-stack)
+    * [Saving State of an Infrastructure Stack](#saving-state-of-an-infrastructure-stack)
+    * [Destroying Infrastructure Stack File](#destroying-infrastructure-stack-file)
+* [Removing Terraform State Artifacts](#removing-terraform-state-artifacts)
+
+## Introduction
 
 Proper use of Hashicorp's `terraform` infrastructure tool requires some
 centralized place to store information about resources that are being
@@ -10,9 +21,9 @@ with Dynamo Database to synchronize access to the infrastructure state.  This
 terraform module contains current best practices declarations to deploy S3 and
 DynamoDB artifacts to keep track of architecture stacks.
 
-### Usage
+## Usage
 
-#### Prerequisites
+### Prerequisites
 
 Implementation of multiple accounts AWS scheme is recommended.  Under the
 arrangement, deployment of terraform state resources should be in a shared
@@ -26,7 +37,7 @@ one spot promotes consistency and is the preferred approach.  Perhaps there are
 some edge cases calling for multiple S3-DynamoDB pairs to track deployments.
 Under these circumstances the module could still be used as described below.
 
-#### Deploying Terraform State Storage Resources
+### Deploying Terraform State Storage Resources
 
 The module requires three inputs: names of an S3 bucket and DynamoDB table and
 an AWS provider configuration for the account that will store the infrastructure
@@ -64,7 +75,9 @@ modules.  Invoking `terraform apply` should provision the S3 bucket and DynamoDB
 table.
 
 **NOTE:** The module is currently in a private repository and github access
-credentials for anderson-optimization account are necessary.
+credentials for `anderson-optimization` account are necessary.
+
+### Working with an Infrastructure Stack
 
 #### Saving State of an Infrastructure Stack
 
@@ -101,13 +114,13 @@ would contain the same data state information as show below.
 bucket                  = "{bucket that stores terraform states}"
 key                     = "{name of the  infrastructure state file}"
 dynamodb_table          = "{DynamoDB table}"
-encrypt                 = true    
+encrypt                 = true
 region                  = "{region where the state infrasturcture was provisioned}"
 shared_credentials_file = "{path to aws credentials file}"
 profile                 = "{aws credentials profile to use for Shared Services account}"
 ```
 
-The terraform infrastructure file would contain blank `backend` declaration.
+The terraform infrastructure file should contain blank `backend` declaration.
 
 ```tf
 terraform {
@@ -121,6 +134,16 @@ To initialize the state backend, the following command should be run.
 terraform init -backend-config=backend.hcl
 ```
 
-### Destroying Terraform State Artifacts
+#### Destroying Infrastructure Stack File
 
-Once the state S3 bucket and DynamoDb database are created
+Whenever `terraform destroy` operation is completed, the state file will be
+essentially empty, but it will not be removed.  If the infrastructure will not
+be spun up again and the file is unnecessary, then it would have to be deleted
+manually.
+
+## Removing Terraform State Artifacts
+
+Whenever terraform state S3 bucket and DynamoDB table need to be destroyed, the
+recommended approach is to do so manually.  It is more onerous to unprovision
+the two artifacts via terraform itself, then to just delete them via AWS
+console.
