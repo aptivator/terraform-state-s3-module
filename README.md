@@ -27,7 +27,7 @@ DynamoDB artifacts to keep track of architecture stacks.
 
 Implementation of multiple accounts AWS scheme is recommended.  Under the
 arrangement, deployment of terraform state resources should be in a shared
-services account.  The latter would typically host continous integration and
+services account.  The latter would typically host continuous integration and
 deployment pipelines, code and image repositories, and any other entities
 applicable organization-wide.
 
@@ -93,7 +93,7 @@ terraform {
     key                     = "{name of the  infrastructure state file}"
     dynamodb_table          = "{DynamoDB table}"
     encrypt                 = true    
-    region                  = "{region where the state infrasturcture was provisioned}"
+    region                  = "{region where the state infrastructure was provisioned}"
     shared_credentials_file = "{path to aws credentials file}"
     profile                 = "{aws credentials profile to use for Shared Services account}"
   }
@@ -102,20 +102,20 @@ terraform {
 
 For the `key`, the recommended approach is to specify the account where the
 service is deployed, followed by the service name, and then followed by the name
-of the state file.  For example, if `programmatic-api` service is deployed in
+of the state file.  For example, if `programmatic-api` service is deployed in a
 development account, then the `key` would be
 `dev/programmatic-api/programmatic-api.tfstate`.
 
 The recommended approach is to specify backend information in a separate file
 (e.g., `backend.hcl`) that would not be committed to source control.  The file
-would contain the same data state information as show below.
+would contain the same data state information as shown below.
 
 ```
 bucket                  = "{bucket that stores terraform states}"
 key                     = "{name of the  infrastructure state file}"
 dynamodb_table          = "{DynamoDB table}"
 encrypt                 = true
-region                  = "{region where the state infrasturcture was provisioned}"
+region                  = "{region where the state infrastructure was provisioned}"
 shared_credentials_file = "{path to aws credentials file}"
 profile                 = "{aws credentials profile to use for Shared Services account}"
 ```
